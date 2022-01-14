@@ -1,13 +1,11 @@
 package s3_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"reflect"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -439,58 +437,6 @@ func TestAccS3Bucket_Basic_requestPayer(t *testing.T) {
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "request_payer", "Requester"),
 					testAccCheckRequestPayer(resourceName, "Requester"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Security_policy(t *testing.T) {
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	partition := acctest.Partition()
-	resourceName := "aws_s3_bucket.bucket"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketWithPolicyConfig(bucketName, partition),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketPolicy(resourceName, testAccBucketPolicy(bucketName, partition)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"acl",
-					"force_destroy",
-					"grant",
-					// NOTE: Prior to Terraform AWS Provider 3.0, this attribute did not import correctly either.
-					//       The Read function does not require GetBucketPolicy, if the argument is not configured.
-					//       Rather than introduce that breaking change as well with 3.0, instead we leave the
-					//       current Read behavior and note this will be deprecated in a later 3.x release along
-					//       with other inline policy attributes across the provider.
-					"policy",
-				},
-			},
-			{
-				Config: testAccBucketConfig_Basic(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketPolicy(resourceName, ""),
-				),
-			},
-			{
-				Config: testAccBucketWithEmptyPolicyConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketPolicy(resourceName, ""),
 				),
 			},
 		},
@@ -2817,53 +2763,6 @@ func testAccCheckBucketTagKeys(n string, keys ...string) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckBucketPolicy(n string, policy string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-
-		out, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if policy == "" {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucketPolicy" {
-				// expected
-				return nil
-			}
-			if err == nil {
-				return fmt.Errorf("Expected no policy, got: %#v", *out.Policy)
-			} else {
-				return fmt.Errorf("GetBucketPolicy error: %v, expected %s", err, policy)
-			}
-		}
-		if err != nil {
-			return fmt.Errorf("GetBucketPolicy error: %v, expected %s", err, policy)
-		}
-
-		if v := out.Policy; v == nil {
-			if policy != "" {
-				return fmt.Errorf("bad policy, found nil, expected: %s", policy)
-			}
-		} else {
-			expected := make(map[string]interface{})
-			if err := json.Unmarshal([]byte(policy), &expected); err != nil {
-				return err
-			}
-			actual := make(map[string]interface{})
-			if err := json.Unmarshal([]byte(*v), &actual); err != nil {
-				return err
-			}
-
-			if !reflect.DeepEqual(expected, actual) {
-				return fmt.Errorf("bad policy, expected: %#v, got %#v", expected, actual)
-			}
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckBucketCors(n string, corsRules []*s3.CORSRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -3057,23 +2956,6 @@ func testAccCheckBucketCheckTags(n string, expectedTags map[string]string) resou
 
 		return nil
 	}
-}
-
-func testAccBucketPolicy(bucketName, partition string) string {
-	return fmt.Sprintf(`{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "s3:GetObject",
-      "Resource": "arn:%[1]s:s3:::%[2]s/*"
-    }
-  ]
-}`, partition, bucketName)
 }
 
 func testAccBucketConfig_Basic(bucketName string) string {
@@ -3323,26 +3205,6 @@ resource "aws_s3_bucket" "bucket" {
 `, bucketName)
 }
 
-func testAccBucketWithPolicyConfig(bucketName, partition string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  policy = %[2]s
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "public-read"
-}
-`, bucketName, strconv.Quote(testAccBucketPolicy(bucketName, partition)))
-}
-
 func testAccBucketDestroyedConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
@@ -3443,26 +3305,6 @@ func testAccBucketDisableDefaultEncryption(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "arbitrary" {
   bucket = %[1]q
-}
-`, bucketName)
-}
-
-func testAccBucketWithEmptyPolicyConfig(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  policy = ""
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "public-read"
 }
 `, bucketName)
 }
