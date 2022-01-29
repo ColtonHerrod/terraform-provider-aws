@@ -943,33 +943,6 @@ func TestAccS3Bucket_Security_corsEmptyOrigin(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Security_logging(t *testing.T) {
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketWithLoggingConfig(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					testAccCheckBucketLogging(resourceName, "aws_s3_bucket.log_bucket", "log/"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
-			},
-		},
-	})
-}
-
 func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
@@ -2909,49 +2882,6 @@ func testAccCheckRequestPayer(n, expectedPayer string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBucketLogging(n, b, p string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-
-		out, err := conn.GetBucketLogging(&s3.GetBucketLoggingInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("GetBucketLogging error: %v", err)
-		}
-
-		if out.LoggingEnabled == nil {
-			return fmt.Errorf("logging not enabled for bucket: %s", rs.Primary.ID)
-		}
-
-		tb := s.RootModule().Resources[b]
-
-		if v := out.LoggingEnabled.TargetBucket; v == nil {
-			if tb.Primary.ID != "" {
-				return fmt.Errorf("bad target bucket, found nil, expected: %s", tb.Primary.ID)
-			}
-		} else {
-			if *v != tb.Primary.ID {
-				return fmt.Errorf("bad target bucket, expected: %s, got %s", tb.Primary.ID, *v)
-			}
-		}
-
-		if v := out.LoggingEnabled.TargetPrefix; v == nil {
-			if p != "" {
-				return fmt.Errorf("bad target prefix, found nil, expected: %s", p)
-			}
-		} else {
-			if *v != p {
-				return fmt.Errorf("bad target prefix, expected: %s, got %s", p, *v)
-			}
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckBucketReplicationRules(n string, rules []*s3.ReplicationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -3532,45 +3462,6 @@ resource "aws_s3_bucket" "bucket" {
     expose_headers  = ["x-amz-server-side-encryption", "ETag"]
     max_age_seconds = 3000
   }
-}
-`, bucketName)
-}
-
-func testAccBucketWithLoggingConfig(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "log_bucket" {
-  bucket = "%[1]s-log"
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
-}
-
-resource "aws_s3_bucket_acl" "log_bucket" {
-  bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
-}
-
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-
-  logging {
-    target_bucket = aws_s3_bucket.log_bucket.id
-    target_prefix = "log/"
-  }
-
-  lifecycle {
-    ignore_changes = [
-      grant,
-    ]
-  }
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
 }
 `, bucketName)
 }
