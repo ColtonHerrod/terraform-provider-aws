@@ -12,5 +12,6 @@ const (
 	ErrCodeNotImplemented                            = "NotImplemented"
 	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
 	ErrCodeOperationAborted                          = "OperationAborted"
+	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 )
