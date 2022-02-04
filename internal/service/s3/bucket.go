@@ -1237,6 +1237,8 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(encryption.ServerSideEncryptionConfiguration)); err != nil {
 			return fmt.Errorf("error setting server_side_encryption_configuration: %w", err)
 		}
+	} else {
+		d.Set("server_side_encryption_configuration", nil)
 	}
 
 	// Object Lock configuration.
