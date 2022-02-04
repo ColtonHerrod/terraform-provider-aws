@@ -261,7 +261,7 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"lifecycle_rule": {
-				Type:       schema.TypeSet,
+				Type:       schema.TypeList,
 				Computed:   true,
 				Deprecated: "Use the aws_s3_bucket_lifecycle_configuration resource instead",
 				Elem: &schema.Resource{
@@ -1091,6 +1091,8 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("lifecycle_rule", flattenBucketLifecycleRules(lifecycle.Rules)); err != nil {
 			return fmt.Errorf("error setting lifecycle_rule: %s", err)
 		}
+	} else {
+		d.Set("lifecycle_rule", nil)
 	}
 
 	// Read the bucket replication configuration
