@@ -898,6 +898,8 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	if output, ok := pol.(*s3.GetBucketPolicyOutput); ok {
 		d.Set("policy", output.Policy)
+	} else {
+		d.Set("policy", nil)
 	}
 
 	//Read the Grant ACL. Reset if `acl` (canned ACL) is set.
