@@ -3371,7 +3371,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -3420,7 +3420,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -3493,7 +3493,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -3575,7 +3575,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -3696,7 +3696,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -3821,7 +3821,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -3904,7 +3904,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -3962,7 +3962,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4018,7 +4018,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4076,7 +4076,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4136,7 +4136,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4184,7 +4184,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4266,7 +4266,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4330,7 +4330,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4386,7 +4386,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4439,7 +4439,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
@@ -4497,7 +4497,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-	  grant,
+      grant,
       replication_configuration
     ]
   }
